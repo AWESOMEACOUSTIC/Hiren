@@ -122,9 +122,34 @@ async function logoutUserController(req, res) {
     res.status(200).json({ message: 'Logout successful' })
 }
 
+/**
+ * @name getProfileController
+ * @description Controller to get the profile of the logged-in user
+ * @route GET /api/auth/profile
+ * @access Private
+ */
+
+async function getProfileController(req, res) {
+    const user = await userModel.findById(req.user.id).select('-password')
+
+    if(!user){
+        return res.status(404).json({ message: 'User not found' })
+    }
+
+    res.status(200).json({ 
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email
+        },
+        message: 'Profile fetched successfully'
+    })
+}
+
 
 module.exports = {
     registerUserController,
     loginUserController,
-    logoutUserController
+    logoutUserController,
+    getProfileController
 }
