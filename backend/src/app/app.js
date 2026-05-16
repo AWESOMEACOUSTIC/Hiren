@@ -10,6 +10,11 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 
 app.use('/api', routes)
+// require all the routes here
+const authRouter = require('../routes/auth.routes')
+
+// use the authRouter for all routes starting with /api/auth
+app.use("/api/auth", authRouter)
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not found' })
