@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import AuthDivider from '../components/AuthDivider.jsx'
 import AuthLayout from '../components/AuthLayout.jsx'
 import AuthSocialButtons from '../components/AuthSocialButtons.jsx'
 import PasswordField from '../components/PasswordField.jsx'
 import TextField from '../components/TextField.jsx'
+import { useAuth } from '../hooks/useAuth.js'
 
 const Register = () => {
 	const [username, setUsername] = useState('')
@@ -12,6 +13,8 @@ const Register = () => {
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [error, setError] = useState('')
+	const { loading, handleRegister } = useAuth()
+	const navigate = useNavigate()
 
 	const isReady =
 		username.trim().length > 0 &&
@@ -23,7 +26,7 @@ const Register = () => {
 		confirmPassword.trim().length > 0 && password !== confirmPassword
 	const showPasswordError = Boolean(error) || passwordsMismatch
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault()
 		if (!isReady) {
 			return
@@ -39,13 +42,26 @@ const Register = () => {
 			return
 		}
 
-		setError('')
+		try {
+			await handleRegister({ username, email, password })
+			navigate('/')
+		} catch (error) {
+			setError('Registration failed. Please try again.')
+		}
 	}
 
 	const clearError = () => {
 		if (error) {
 			setError('')
 		}
+	}
+
+	if (loading) {
+		return (
+			<main>
+				<h1>Loading....</h1>
+			</main>
+		)
 	}
 
 	return (
@@ -58,7 +74,7 @@ const Register = () => {
 			<form className="space-y-5" onSubmit={handleSubmit}>
 				<TextField
 					label="Username"
-					name="Username"
+					name="username"
 					onChange={(event) => {
 						setUsername(event.target.value)
 						clearError()

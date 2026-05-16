@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Create an axios instance with default configuration to interact with the authentication API
 const api = axios.create({
-    baseURL: "https://localhost:4000/api/auth",
+    baseURL: "http://localhost:4000/api/auth",
     withCredentials: true // Include cookies in all requests {reason: "Needed for session management"}
 })
 

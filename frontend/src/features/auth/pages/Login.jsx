@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import AuthDivider from '../components/AuthDivider.jsx'
 import AuthLayout from '../components/AuthLayout.jsx'
 import AuthSocialButtons from '../components/AuthSocialButtons.jsx'
 import PasswordField from '../components/PasswordField.jsx'
 import TextField from '../components/TextField.jsx'
+import { useAuth } from '../hooks/useAuth.js'
 
 const Login = () => {
 	const [email, setEmail] = useState('')
@@ -13,19 +14,35 @@ const Login = () => {
 
 	const isReady = email.trim().length > 0 && password.trim().length > 0
 	const showPasswordError = Boolean(error)
+    
+	const { loading, handleLogin } = useAuth()
+	const navigate = useNavigate()
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault()
 		if (!isReady) {
 			return
 		}
 
 		if (password.length < 8) {
-			setError('Incorrect password. Please try again.')
+			setError('Password should be at least 8 characters.')
 			return
 		}
 
-		setError('')
+		try {
+			await handleLogin({ email, password })
+			navigate('/')
+		} catch (error) {
+			setError('Incorrect email or password. Please try again.')
+		}
+	}
+    
+	if (loading) {
+		return (
+			<main>
+				<h1>Loading....</h1>
+			</main>
+		)
 	}
 
 	const handleEmailChange = (event) => {
