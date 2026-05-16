@@ -7,14 +7,14 @@ import PasswordField from '../components/PasswordField.jsx'
 import TextField from '../components/TextField.jsx'
 
 const Register = () => {
-	const [fullName, setFullName] = useState('')
+	const [username, setUsername] = useState('')
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [error, setError] = useState('')
 
 	const isReady =
-		fullName.trim().length > 0 &&
+		username.trim().length > 0 &&
 		email.trim().length > 0 &&
 		password.trim().length > 0 &&
 		confirmPassword.trim().length > 0
@@ -57,15 +57,15 @@ const Register = () => {
 			<AuthDivider />
 			<form className="space-y-5" onSubmit={handleSubmit}>
 				<TextField
-					label="Full name"
-					name="fullName"
+					label="Username"
+					name="Username"
 					onChange={(event) => {
-						setFullName(event.target.value)
+						setUsername(event.target.value)
 						clearError()
 					}}
-					placeholder="Your full name"
+					placeholder="Username"
 					type="text"
-					value={fullName}
+					value={username}
 				/>
 				<TextField
 					label="Email"
