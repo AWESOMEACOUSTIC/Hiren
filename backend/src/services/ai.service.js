@@ -25,7 +25,8 @@ const interviewReportSchema = z.object({
     preparationResources: z.array(z.object({
         day: z.number().describe("The day number for which the preparation resource is recommended"),
         resource: z.string().describe("The preparation resource recommended for the candidate to fill the skill gap")
-    })).describe("A list of preparation resources recommended for the candidate to fill the identified skill gaps, along with the day number for which each resource is recommended.")
+    })).describe("A list of preparation resources recommended for the candidate to fill the identified skill gaps, along with the day number for which each resource is recommended."),
+    title: z.string().describe("A concise title summarizing the overall assessment of the candidate's fit for the role, such as 'Strong Fit', 'Good Fit with Some Gaps', 'Needs Improvement', etc.")
 })
 
 
