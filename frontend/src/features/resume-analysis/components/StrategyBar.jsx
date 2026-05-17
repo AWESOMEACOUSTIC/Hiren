@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 
-const StrategyBar = ({ canGenerate, onGenerate }) => (
+const StrategyBar = ({ canGenerate, onGenerate, isLoading = false }) => (
 	<motion.div
 		animate={{ opacity: 1, y: 0 }}
 		className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#2e292a] bg-[#1b1718]/80 px-6 py-4 text-sm text-[#d4c2c5] md:flex-row md:items-center"
@@ -10,11 +10,11 @@ const StrategyBar = ({ canGenerate, onGenerate }) => (
 		<span>AI-Powered Strategy Generation - Approx 30s</span>
 		<button
 			className={`inline-flex items-center gap-2 rounded-full border px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-				canGenerate
+				canGenerate && !isLoading
 					? 'border-[#f2b7c6] bg-[#20030d] text-[#f2b7c6] shadow-[0_0_25px_rgba(242,183,198,0.18)] hover:border-[#ffd9e2]'
 					: 'border-[#393334] bg-[#231e1f] text-[#9d8d90]'
 			}`}
-			disabled={!canGenerate}
+			disabled={!canGenerate || isLoading}
 			onClick={onGenerate}
 			type="button"
 		>
@@ -33,7 +33,7 @@ const StrategyBar = ({ canGenerate, onGenerate }) => (
 					<path d="M5 12h14" />
 				</svg>
 			</span>
-			Generate My Interview Strategy
+			{isLoading ? 'Generating Strategy...' : 'Generate My Interview Strategy'}
 		</button>
 	</motion.div>
 )
