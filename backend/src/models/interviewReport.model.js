@@ -22,6 +22,10 @@ const technicalQuestionSchema = new mongoose.Schema({
     intention: {
         type: String,
         required: [true, 'Intention is required']
+    },
+    answer: {
+        type: String,
+        required: [true, 'Answer is required']
     }
 }, {
     _id: false
@@ -35,6 +39,10 @@ const behavioralQuestionSchema = new mongoose.Schema({
     intention: {
         type: String,
         required: [true, 'Intention is required']
+    },
+    answer: {
+        type: String,
+        required: [true, 'Answer is required']
     }
 }, {
     _id: false
@@ -59,13 +67,9 @@ const preparationResourceSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Day is required']
     },
-    focus: {
+    resource: {
         type: String,
-        required: [true, 'Focus is required']
-    },
-    tasks : {
-        type: String,
-        required: [true, 'Tasks are required']
+        required: [true, 'Resource is required']
     }
 })
 

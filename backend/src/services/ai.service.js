@@ -1,4 +1,4 @@
-const { GoogleGenAI, Behavior } = require("@google/genai");
+const { GoogleGenAI } = require("@google/genai");
 const { z } = require("zod");
 const { zodToJsonSchema } = require("zod-to-json-schema");
 
@@ -13,7 +13,7 @@ const interviewReportSchema = z.object({
         intention: z.string().describe("The intention of interviewer behind asking this technical question"),
         answer: z.string().describe("The candidate's answer to the technical question. How to answer this question well? What are the key points that should be covered in the answer in a paragraphed format?")
     })).describe("A list of technical questions asked during the interview, along with the intention behind each question and an ideal answer."),
-    BehavioralQuestions: z.array(z.object({
+    behavioralQuestions: z.array(z.object({
         question: z.string().describe("The behavioral question asked during the interview"),
         intention: z.string().describe("The intention of interviewer behind asking this behavioral question"),
         answer: z.string().describe("The candidate's answer to the behavioral question. How to answer this question well? What are the key points that should be covered in the answer in a paragraphed format?")
@@ -48,7 +48,16 @@ async function generateInterviewReport({resume, selfDescription, jobDescription}
         }
     })
 
-    console.log(JSON.parse(response.text))
+    if (!response || !response.text) {
+        throw new Error('AI response did not contain JSON text')
+    }
+
+    try {
+        return JSON.parse(response.text)
+    } catch (error) {
+        error.message = `Failed to parse AI JSON response: ${error.message}`
+        throw error
+    }
 }
 
 module.exports = { generateInterviewReport }
