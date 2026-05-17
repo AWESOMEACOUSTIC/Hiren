@@ -25,6 +25,7 @@ const Register = () => {
 	const passwordsMismatch =
 		confirmPassword.trim().length > 0 && password !== confirmPassword
 	const showPasswordError = Boolean(error) || passwordsMismatch
+	const canSubmit = isReady && !loading
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -54,14 +55,6 @@ const Register = () => {
 		if (error) {
 			setError('')
 		}
-	}
-
-	if (loading) {
-		return (
-			<main>
-				<h1>Loading....</h1>
-			</main>
-		)
 	}
 
 	return (
@@ -118,14 +111,14 @@ const Register = () => {
 				/>
 				<button
 					className={`mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-						isReady
+						canSubmit
 							? 'bg-[color:var(--auth-violet-400)] text-[color:var(--auth-text-black)] shadow-[0_0_30px_var(--auth-shadow-violet)] hover:bg-[color:var(--auth-violet-300)]'
 							: 'bg-[color:var(--auth-white-10)] text-[color:var(--auth-white-40)]'
 					}`}
-					disabled={!isReady}
+					disabled={!canSubmit}
 					type="submit"
 				>
-					Create account
+					{loading ? 'Creating account...' : 'Create account'}
 				</button>
 			</form>
 			<p className="mt-6 text-center text-xs text-[color:var(--auth-white-50)]">

@@ -17,6 +17,7 @@ const Login = () => {
     
 	const { loading, handleLogin } = useAuth()
 	const navigate = useNavigate()
+	const canSubmit = isReady && !loading
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -37,14 +38,6 @@ const Login = () => {
 		}
 	}
     
-	if (loading) {
-		return (
-			<main>
-				<h1>Loading....</h1>
-			</main>
-		)
-	}
-
 	const handleEmailChange = (event) => {
 		setEmail(event.target.value)
 		if (error) {
@@ -94,14 +87,14 @@ const Login = () => {
 				/>
 				<button
 					className={`mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-						isReady
+						canSubmit
 							? 'bg-[color:var(--auth-violet-400)] text-[color:var(--auth-text-black)] shadow-[0_0_30px_var(--auth-shadow-violet)] hover:bg-[color:var(--auth-violet-300)]'
 							: 'bg-[color:var(--auth-white-10)] text-[color:var(--auth-white-40)]'
 					}`}
-					disabled={!isReady}
+					disabled={!canSubmit}
 					type="submit"
 				>
-					Log in
+					{loading ? 'Signing in...' : 'Log in'}
 				</button>
 			</form>
 			<p className="mt-6 text-center text-xs text-[color:var(--auth-white-50)]">
