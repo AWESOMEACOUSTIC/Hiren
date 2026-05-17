@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, Navigate, useNavigate } from 'react-router'
 import AuthDivider from '../components/AuthDivider.jsx'
 import AuthLayout from '../components/AuthLayout.jsx'
 import AuthSocialButtons from '../components/AuthSocialButtons.jsx'
@@ -15,8 +15,13 @@ const Login = () => {
 	const isReady = email.trim().length > 0 && password.trim().length > 0
 	const showPasswordError = Boolean(error)
     
-	const { loading, handleLogin } = useAuth()
+	const { user, loading, handleLogin } = useAuth()
 	const navigate = useNavigate()
+	const canSubmit = isReady && !loading
+
+	if (user) {
+		return <Navigate to="/auth/resume-analysis" replace />
+	}
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -37,14 +42,6 @@ const Login = () => {
 		}
 	}
     
-	if (loading) {
-		return (
-			<main>
-				<h1>Loading....</h1>
-			</main>
-		)
-	}
-
 	const handleEmailChange = (event) => {
 		setEmail(event.target.value)
 		if (error) {
@@ -80,7 +77,10 @@ const Login = () => {
 					hasError={showPasswordError}
 					label="Password"
 					labelAction={
-						<button className="text-xs text-violet-300/80" type="button">
+						<button
+							className="text-xs text-[color:var(--auth-violet-300)] opacity-80"
+							type="button"
+						>
 							Forgot password?
 						</button>
 					}
@@ -91,19 +91,27 @@ const Login = () => {
 				/>
 				<button
 					className={`mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-						isReady
-							? 'bg-violet-400 text-black shadow-[0_0_30px_rgba(167,139,250,0.35)] hover:bg-violet-300'
-							: 'bg-white/10 text-white/40'
+						canSubmit
+							? 'bg-[color:var(--auth-violet-400)] text-[color:var(--auth-text-black)] shadow-[0_0_30px_var(--auth-shadow-violet)] hover:bg-[color:var(--auth-violet-300)]'
+							: 'bg-[color:var(--auth-white-10)] text-[color:var(--auth-white-40)]'
 					}`}
-					disabled={!isReady}
+					disabled={!canSubmit}
 					type="submit"
 				>
-					Log in
+					<span className="inline-flex items-center justify-center">
+						{loading ? 'Signing in...' : 'Log in'}
+						{loading && (
+							<span
+								aria-hidden="true"
+								className="ml-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+							/>
+						)}
+					</span>
 				</button>
 			</form>
-			<p className="mt-6 text-center text-xs text-white/50">
+			<p className="mt-6 text-center text-xs text-[color:var(--auth-white-50)]">
 				Don&apos;t have an account?{' '}
-				<Link className="text-violet-300" to="/auth/register">
+				<Link className="text-[color:var(--auth-violet-300)]" to="/auth/register">
 					Sign up
 				</Link>
 			</p>

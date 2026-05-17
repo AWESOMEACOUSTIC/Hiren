@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, Navigate, useNavigate } from 'react-router'
 import AuthDivider from '../components/AuthDivider.jsx'
 import AuthLayout from '../components/AuthLayout.jsx'
 import AuthSocialButtons from '../components/AuthSocialButtons.jsx'
@@ -13,7 +13,7 @@ const Register = () => {
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [error, setError] = useState('')
-	const { loading, handleRegister } = useAuth()
+	const { user, loading, handleRegister } = useAuth()
 	const navigate = useNavigate()
 
 	const isReady =
@@ -25,6 +25,11 @@ const Register = () => {
 	const passwordsMismatch =
 		confirmPassword.trim().length > 0 && password !== confirmPassword
 	const showPasswordError = Boolean(error) || passwordsMismatch
+	const canSubmit = isReady && !loading
+
+	if (user) {
+		return <Navigate to="/auth/login" replace />
+	}
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -54,14 +59,6 @@ const Register = () => {
 		if (error) {
 			setError('')
 		}
-	}
-
-	if (loading) {
-		return (
-			<main>
-				<h1>Loading....</h1>
-			</main>
-		)
 	}
 
 	return (
@@ -118,19 +115,27 @@ const Register = () => {
 				/>
 				<button
 					className={`mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
-						isReady
-							? 'bg-violet-400 text-black shadow-[0_0_30px_rgba(167,139,250,0.35)] hover:bg-violet-300'
-							: 'bg-white/10 text-white/40'
+						canSubmit
+							? 'bg-[color:var(--auth-violet-400)] text-[color:var(--auth-text-black)] shadow-[0_0_30px_var(--auth-shadow-violet)] hover:bg-[color:var(--auth-violet-300)]'
+							: 'bg-[color:var(--auth-white-10)] text-[color:var(--auth-white-40)]'
 					}`}
-					disabled={!isReady}
+					disabled={!canSubmit}
 					type="submit"
 				>
-					Create account
+					<span className="inline-flex items-center justify-center">
+						{loading ? 'Creating account...' : 'Create account'}
+						{loading && (
+							<span
+								aria-hidden="true"
+								className="ml-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+							/>
+						)}
+					</span>
 				</button>
 			</form>
-			<p className="mt-6 text-center text-xs text-white/50">
+			<p className="mt-6 text-center text-xs text-[color:var(--auth-white-50)]">
 				Already have an account?{' '}
-				<Link className="text-violet-300" to="/auth/login">
+				<Link className="text-[color:var(--auth-violet-300)]" to="/auth/login">
 					Sign in
 				</Link>
 			</p>
