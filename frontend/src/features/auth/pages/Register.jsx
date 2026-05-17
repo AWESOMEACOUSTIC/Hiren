@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, Navigate, useNavigate } from 'react-router'
 import AuthDivider from '../components/AuthDivider.jsx'
 import AuthLayout from '../components/AuthLayout.jsx'
 import AuthSocialButtons from '../components/AuthSocialButtons.jsx'
@@ -13,7 +13,7 @@ const Register = () => {
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [error, setError] = useState('')
-	const { loading, handleRegister } = useAuth()
+	const { user, loading, handleRegister } = useAuth()
 	const navigate = useNavigate()
 
 	const isReady =
@@ -26,6 +26,10 @@ const Register = () => {
 		confirmPassword.trim().length > 0 && password !== confirmPassword
 	const showPasswordError = Boolean(error) || passwordsMismatch
 	const canSubmit = isReady && !loading
+
+	if (user) {
+		return <Navigate to="/auth/login" replace />
+	}
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -118,7 +122,15 @@ const Register = () => {
 					disabled={!canSubmit}
 					type="submit"
 				>
-					{loading ? 'Creating account...' : 'Create account'}
+					<span className="inline-flex items-center justify-center">
+						{loading ? 'Creating account...' : 'Create account'}
+						{loading && (
+							<span
+								aria-hidden="true"
+								className="ml-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+							/>
+						)}
+					</span>
 				</button>
 			</form>
 			<p className="mt-6 text-center text-xs text-[color:var(--auth-white-50)]">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, Navigate, useNavigate } from 'react-router'
 import AuthDivider from '../components/AuthDivider.jsx'
 import AuthLayout from '../components/AuthLayout.jsx'
 import AuthSocialButtons from '../components/AuthSocialButtons.jsx'
@@ -15,9 +15,13 @@ const Login = () => {
 	const isReady = email.trim().length > 0 && password.trim().length > 0
 	const showPasswordError = Boolean(error)
     
-	const { loading, handleLogin } = useAuth()
+	const { user, loading, handleLogin } = useAuth()
 	const navigate = useNavigate()
 	const canSubmit = isReady && !loading
+
+	if (user) {
+		return <Navigate to="/auth/resume-analysis" replace />
+	}
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -94,7 +98,15 @@ const Login = () => {
 					disabled={!canSubmit}
 					type="submit"
 				>
-					{loading ? 'Signing in...' : 'Log in'}
+					<span className="inline-flex items-center justify-center">
+						{loading ? 'Signing in...' : 'Log in'}
+						{loading && (
+							<span
+								aria-hidden="true"
+								className="ml-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+							/>
+						)}
+					</span>
 				</button>
 			</form>
 			<p className="mt-6 text-center text-xs text-[color:var(--auth-white-50)]">
