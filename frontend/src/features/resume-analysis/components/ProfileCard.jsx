@@ -38,7 +38,7 @@ const ProfileCard = ({ resumeFile, onResumeChange, selfDescription, onSelfDescri
 				<div>
 					<div className="flex items-center justify-between text-xs text-[#d4c2c5]">
 						<span>Upload Resume</span>
-						<span className="text-[#9d8d90]">Best results</span>
+						<span className="text-[#f2b7c6]">Required</span>
 					</div>
 					<label
 						className={`mt-2 flex min-h-[130px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#504446] bg-[#171213]/60 px-6 text-center text-xs text-[#9d8d90] transition hover:border-[#9d8d90] ${
@@ -118,7 +118,7 @@ const ProfileCard = ({ resumeFile, onResumeChange, selfDescription, onSelfDescri
 							<path d="M12 8a4 4 0 0 1 4 4v1" />
 							<circle cx="12" cy="12" r="9" />
 						</svg>
-						Either a Resume or a Self-Description is required to generate a personalized plan.
+						A Resume is required to generate a personalized plan. Self-description is optional.
 					</span>
 				</div>
 			</div>
