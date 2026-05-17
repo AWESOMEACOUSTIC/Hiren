@@ -23,7 +23,7 @@ const ResumeAnalysis = () => {
 
 	return (
 		<main className="min-h-screen bg-[#171213] text-[#ebe0e1]">
-			<div className="relative overflow-hidden font-['Space Grotesk']">
+			<div className="relative overflow-hidden font-['Space_Grotesk']">
 				<ResumeAnalysisBackground />
 				<ResumeAnalysisHeader />
 

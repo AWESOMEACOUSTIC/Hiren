@@ -6,6 +6,7 @@ import Register from '../features/auth/pages/Register.jsx'
 import Home from '../pages/public/Home.jsx'
 import NotFound from '../pages/public/NotFound.jsx'
 import ResumeAnalysis from '../features/resume-analysis/pages/ResumeAnalysis.jsx'
+import Dashboard from '../features/dashboard/pages/Dashboard.jsx'
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
   {
     path: '/auth/resume-analysis',
     element:  <ResumeAnalysis />
+  },
+  {
+    path: '/auth/dashboard',
+    element: <Dashboard />
   },
   {
     element: <ProtectedRoute />,
