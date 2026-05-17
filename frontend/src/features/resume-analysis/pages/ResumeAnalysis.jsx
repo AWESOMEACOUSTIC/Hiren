@@ -1,0 +1,66 @@
+import { useState } from 'react'
+import { motion } from 'motion/react'
+import ResumeAnalysisBackground from '../components/ResumeAnalysisBackground.jsx'
+import ResumeAnalysisFooter from '../components/ResumeAnalysisFooter.jsx'
+import ResumeAnalysisHeader from '../components/ResumeAnalysisHeader.jsx'
+import ResumeAnalysisHero from '../components/ResumeAnalysisHero.jsx'
+import JobDescriptionCard from '../components/JobDescriptionCard.jsx'
+import ProfileCard from '../components/ProfileCard.jsx'
+import StrategyBar from '../components/StrategyBar.jsx'
+
+const MAX_JOB_DESCRIPTION = 5000
+
+const ResumeAnalysis = () => {
+	const [jobDescription, setJobDescription] = useState('')
+	const [selfDescription, setSelfDescription] = useState('')
+	const [resumeFile, setResumeFile] = useState(null)
+
+	const characterCount = jobDescription.length
+
+	const canGenerate =
+		jobDescription.trim().length > 0 &&
+		(selfDescription.trim().length > 0 || Boolean(resumeFile))
+
+	return (
+		<main className="min-h-screen bg-[#171213] text-[#ebe0e1]">
+			<div className="relative overflow-hidden font-['Space Grotesk']">
+				<ResumeAnalysisBackground />
+				<ResumeAnalysisHeader />
+
+				<section className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-12">
+					<ResumeAnalysisHero
+						accent="Interview Plan"
+						subtitle="Let our AI analyze the job requirements and your unique profile to build a winning strategy."
+						title="Create Your Custom"
+					/>
+
+					<motion.div
+						animate={{ opacity: 1, y: 0 }}
+						className="mt-10 grid gap-6 lg:grid-cols-2"
+						initial={{ opacity: 0, y: 16 }}
+						transition={{ duration: 0.7, ease: 'easeOut', delay: 0.22 }}
+					>
+						<JobDescriptionCard
+							characterCount={characterCount}
+							maxLength={MAX_JOB_DESCRIPTION}
+							onChange={setJobDescription}
+							value={jobDescription}
+						/>
+						<ProfileCard
+							onResumeChange={setResumeFile}
+							onSelfDescriptionChange={setSelfDescription}
+							resumeFile={resumeFile}
+							selfDescription={selfDescription}
+						/>
+					</motion.div>
+
+					<StrategyBar canGenerate={canGenerate} />
+				</section>
+
+				<ResumeAnalysisFooter />
+			</div>
+		</main>
+	)
+}
+
+export default ResumeAnalysis
