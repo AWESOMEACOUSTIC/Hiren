@@ -14,4 +14,26 @@ const interviewRouter   = express.Router()
  */
 interviewRouter.post('/', authUSer.authMiddleware, upload.single('resume'), interviewController.generateInterviewReport)
 
+
+/**
+ * @route GET /api/interview/reports/:interviewId
+ * @desc  Retrieve a previously generated interview report by its ID.
+ * @access Private
+ * @response { interviewReport: { matchScore: number, technicalQuestions: [{ question: string, intention: string, answer: string }], behavioralQuestions: [{ question: string, intention: string, answer: string }], skillGaps: [{ skill: string, severity: 'low' | 'medium' | 'high' }], preparationResources: [{ day: number, resource: string }] } }
+ */
+interviewRouter.get('/reports/:interviewId', authUSer.authMiddleware, interviewController.getInterviewReportById)
+
+/**
+ * @route GET /api/interview/
+ * @desc  Retrieve all interview reports for the authenticated user.
+ * @access Private
+ * @response { interviewReports: [{ id: string, matchScore: number, technicalQuestions: [{ question: string, intention: string, answer: string }], behavioralQuestions: [{ question: string, intention: string, answer: string }], skillGaps: [{ skill: string, severity: 'low' | 'medium' | 'high' }], preparationResources: [{ day: number, resource: string }] }] }
+ */
+interviewRouter.get('/', authUSer.authMiddleware, interviewController.getAllInterviewReportsForUser)
+
+
+
+
+
+
 module.exports = interviewRouter

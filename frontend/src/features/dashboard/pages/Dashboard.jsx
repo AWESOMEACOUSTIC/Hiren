@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router'
 import DashboardLayout from '../components/DashboardLayout.jsx'
 import DashboardSection from '../components/DashboardSection.jsx'
 import MatchScoreCard, { MatchScoreIcons } from '../components/MatchScoreCard.jsx'
@@ -7,11 +8,14 @@ import RoadmapCard from '../components/RoadmapCard.jsx'
 import Sidebar from '../components/Sidebar.jsx'
 import SkillGapsCard from '../components/SkillGapsCard.jsx'
 import TopBar from '../components/TopBar.jsx'
+import { useInterviewReports } from '../hooks/useInterviewReports.js'
 
 const Dashboard = () => {
+	const { reportId } = useParams()
 	const [activeSection, setActiveSection] = useState('technical')
+	const { report, handleGetReportById } = useInterviewReports()
 
-	const technicalQuestions = [
+	const defaultTechnicalQuestions = [
 		{
 			title: 'Implement a Distributed Rate Limiter',
 			intention:
@@ -28,7 +32,7 @@ const Dashboard = () => {
 		},
 	]
 
-	const behavioralQuestions = [
+	const defaultBehavioralQuestions = [
 		{
 			title: 'Leading a Cross-Team Migration',
 			intention:
@@ -64,7 +68,7 @@ const Dashboard = () => {
 		},
 	]
 
-	const skillGaps = ['#', '# Message', '# Event', '# Loop', '# Concurrency']
+	const defaultSkillGaps = ['#', '# Message', '# Event', '# Loop', '# Concurrency']
 
 	const insights = [
 		{
@@ -84,12 +88,56 @@ const Dashboard = () => {
 		},
 	]
 
+	useEffect(() => {
+		if (reportId) {
+			handleGetReportById(reportId)
+		}
+	}, [handleGetReportById, reportId])
+
+	const technicalQuestions = report?.technicalQuestions?.length
+		? report.technicalQuestions.map((item, index) => ({
+				title: item.question || `Technical Question ${index + 1}`,
+				intention:
+					item.intention ||
+					'Define the system constraints and edge cases before proposing a solution.',
+				description:
+					item.answer ||
+					item.question ||
+					'Outline your approach with key design considerations and tradeoffs.',
+			}))
+		: defaultTechnicalQuestions
+
+	const behavioralSource = report?.behavioralQuestions || report?.behaviouralQuestions
+
+	const behavioralQuestions = behavioralSource?.length
+		? behavioralSource.map((item, index) => ({
+				title: item.question || `Behavioral Prompt ${index + 1}`,
+				intention:
+					item.intention ||
+					'Showcase ownership, collaboration, and the measurable impact of your actions.',
+				description:
+					item.answer ||
+					item.question ||
+					'Share the context, your actions, and the outcome using a clear narrative.',
+			}))
+		: defaultBehavioralQuestions
+
+	const skillGaps = report?.skillGaps?.length
+		? report.skillGaps
+				.map((gap) => gap.skill || gap)
+				.filter(Boolean)
+				.map((skill) => `# ${skill}`)
+		: defaultSkillGaps
+
+	const matchScore =
+		typeof report?.matchScore === 'number' ? Math.round(report.matchScore) : 85
+
 	return (
 		<DashboardLayout
 			rightPanel={
 				<>
 					<SkillGapsCard gaps={skillGaps} />
-					<MatchScoreCard insights={insights} score={85} />
+					<MatchScoreCard insights={insights} score={matchScore} />
 				</>
 			}
 			sidebar={<Sidebar activeKey={activeSection} onNavigate={setActiveSection} />}

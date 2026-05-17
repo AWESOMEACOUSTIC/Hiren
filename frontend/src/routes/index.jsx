@@ -7,6 +7,7 @@ import Home from '../pages/public/Home.jsx'
 import NotFound from '../pages/public/NotFound.jsx'
 import ResumeAnalysis from '../features/resume-analysis/pages/ResumeAnalysis.jsx'
 import Dashboard from '../features/dashboard/pages/Dashboard.jsx'
+import { DashboardReportsProvider } from '../features/dashboard/state/dashboardReports.jsx'
 
 const router = createBrowserRouter([
   {
@@ -22,8 +23,12 @@ const router = createBrowserRouter([
     element:  <ResumeAnalysis />
   },
   {
-    path: '/auth/dashboard',
-    element: <Dashboard />
+    path: '/auth/dashboard/:reportId?',
+    element: (
+      <DashboardReportsProvider>
+        <Dashboard />
+      </DashboardReportsProvider>
+    )
   },
   {
     element: <ProtectedRoute />,

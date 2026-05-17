@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { motion } from 'motion/react'
 import ResumeAnalysisBackground from '../components/ResumeAnalysisBackground.jsx'
 import ResumeAnalysisFooter from '../components/ResumeAnalysisFooter.jsx'
@@ -7,6 +8,7 @@ import ResumeAnalysisHero from '../components/ResumeAnalysisHero.jsx'
 import JobDescriptionCard from '../components/JobDescriptionCard.jsx'
 import ProfileCard from '../components/ProfileCard.jsx'
 import StrategyBar from '../components/StrategyBar.jsx'
+import { useAnalysis } from '../hooks/useAnalysis.js'
 
 const MAX_JOB_DESCRIPTION = 5000
 
@@ -14,12 +16,32 @@ const ResumeAnalysis = () => {
 	const [jobDescription, setJobDescription] = useState('')
 	const [selfDescription, setSelfDescription] = useState('')
 	const [resumeFile, setResumeFile] = useState(null)
+	const navigate = useNavigate()
+	const { loading, handleGenerateReport } = useAnalysis()
 
 	const characterCount = jobDescription.length
 
 	const canGenerate =
 		jobDescription.trim().length > 0 &&
 		(selfDescription.trim().length > 0 || Boolean(resumeFile))
+
+	const handleGenerate = async () => {
+		if (!canGenerate || loading) {
+			return
+		}
+
+		try {
+			const reportData = await handleGenerateReport({
+				jobDescription,
+				selfDescription,
+				resumeFile,
+			})
+			const reportId = reportData?.interviewReport?._id || reportData?.interviewReport?.id
+			navigate(reportId ? `/auth/dashboard/${reportId}` : '/auth/dashboard')
+		} catch (error) {
+			console.error('Failed to generate report:', error)
+		}
+	}
 
 	return (
 		<main className="min-h-screen bg-[#171213] text-[#ebe0e1]">
@@ -54,7 +76,11 @@ const ResumeAnalysis = () => {
 						/>
 					</motion.div>
 
-					<StrategyBar canGenerate={canGenerate} />
+					<StrategyBar
+						canGenerate={canGenerate}
+						isLoading={loading}
+						onGenerate={handleGenerate}
+					/>
 				</section>
 
 				<ResumeAnalysisFooter />
