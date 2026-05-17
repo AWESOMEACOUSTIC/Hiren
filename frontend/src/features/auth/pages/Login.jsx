@@ -80,7 +80,10 @@ const Login = () => {
 					hasError={showPasswordError}
 					label="Password"
 					labelAction={
-						<button className="text-xs text-violet-300/80" type="button">
+						<button
+							className="text-xs text-[color:var(--auth-violet-300)] opacity-80"
+							type="button"
+						>
 							Forgot password?
 						</button>
 					}
@@ -92,8 +95,8 @@ const Login = () => {
 				<button
 					className={`mt-2 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
 						isReady
-							? 'bg-violet-400 text-black shadow-[0_0_30px_rgba(167,139,250,0.35)] hover:bg-violet-300'
-							: 'bg-white/10 text-white/40'
+							? 'bg-[color:var(--auth-violet-400)] text-[color:var(--auth-text-black)] shadow-[0_0_30px_var(--auth-shadow-violet)] hover:bg-[color:var(--auth-violet-300)]'
+							: 'bg-[color:var(--auth-white-10)] text-[color:var(--auth-white-40)]'
 					}`}
 					disabled={!isReady}
 					type="submit"
@@ -101,9 +104,9 @@ const Login = () => {
 					Log in
 				</button>
 			</form>
-			<p className="mt-6 text-center text-xs text-white/50">
+			<p className="mt-6 text-center text-xs text-[color:var(--auth-white-50)]">
 				Don&apos;t have an account?{' '}
-				<Link className="text-violet-300" to="/auth/register">
+				<Link className="text-[color:var(--auth-violet-300)]" to="/auth/register">
 					Sign up
 				</Link>
 			</p>
