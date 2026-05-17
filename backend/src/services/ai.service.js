@@ -1,6 +1,8 @@
 const { GoogleGenAI } = require("@google/genai");
 const { z } = require("zod");
 const { zodToJsonSchema } = require("zod-to-json-schema");
+const puppeteer = require('puppeteer')
+const pdfParse = require('pdf-parse')
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_API_KEY
@@ -61,4 +63,49 @@ async function generateInterviewReport({resume, selfDescription, jobDescription}
     }
 }
 
-module.exports = { generateInterviewReport }
+async function generatePdfFromHtml(htmlContent){
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
+    await page.setContent(htmlContent, { 
+        waitUntil: 'networkidle0' 
+    })
+    const pdfBuffer = await page.pdf({ format: 'A4' })
+    await browser.close()
+    return pdfBuffer
+}
+
+
+async function generateResumePdf({resumeText, selfDescription, jobDescription}) {
+    const resumePdfSchema = z.object({
+        html: z.string().describe("The HTML contet of the resume which can be converted to PDF format using any library like puppeteer. The HTML should be well formatted and styled to look like a professional resume.")
+
+    })
+    const prompt = `You are an expert resume writer. Based on the candidate's self description, job description and the resume text, you have to generate a well formatted and styled HTML content of the resume which can be converted to PDF format using any library like puppeteer. The HTML should be well formatted and styled to look like a professional resume.
+                    Resume: ${resumeText}
+                    Self Description: ${selfDescription}
+                    Job Description: ${jobDescription}
+                    The response should be a JSON object with a single key "html" which contains the HTML content of the resume.`
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: zodToJsonSchema(resumePdfSchema),
+        }
+    })
+
+    if (!response || !response.text) {
+        throw new Error('AI response did not contain JSON text')
+    }
+
+    try {
+        const jsonContent = JSON.parse(response.text)
+        const pdfBuffer = await generatePdfFromHtml(jsonContent.html)
+        return pdfBuffer
+    } catch (error) {
+        error.message = `Failed to parse AI JSON response: ${error.message}`
+        throw error
+    }
+}
+
+module.exports = { generateInterviewReport, generateResumePdf }

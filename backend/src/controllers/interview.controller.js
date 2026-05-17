@@ -1,5 +1,5 @@
 const pdfParse = require('pdf-parse')
-const { generateInterviewReport: generateInterviewReportAi } = require('../services/ai.service')
+const { generateInterviewReport: generateInterviewReportAi, generateResumePdf } = require('../services/ai.service')
 const interviewReportModel = require('../models/interviewReport.model')
 
 
@@ -98,5 +98,36 @@ async function getAllInterviewReportsForUser(req, res) {
     }
 }
 
+/**
+ * @description Generate a PDF version of the candidate's resume based on the original resume text, job description, and self-description.
+ */
 
-module.exports = {generateInterviewReport, getInterviewReportById, getAllInterviewReportsForUser}
+async function generateResumePdf(req, res){
+    const {interviewId} = req.params
+
+    if (!interviewId) {
+        return res.status(400).json({ message: 'Interview ID is required' })
+    }
+
+    const interviewReport = await interviewReportModel.findById(interviewId).populate('user', 'name email')
+
+    if (!interviewReport) {
+        return res.status(404).json({ message: 'Interview report not found' })
+    }
+
+    const { resumeText, jobDescription, selfDescription } = interviewReport
+
+    try {
+        const pdfBuffer = await generateResumePdf({ resumeText, jobDescription, selfDescription })
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename=resume_${interviewId}.pdf`,
+        })
+        res.send(pdfBuffer)
+    }catch (error) {
+        console.error('Error generating resume PDF:', error)
+        res.status(500).json({ error: 'Failed to generate resume PDF' })
+    }
+}
+
+module.exports = {generateInterviewReport, getInterviewReportById, getAllInterviewReportsForUser, generateResumePdf}
