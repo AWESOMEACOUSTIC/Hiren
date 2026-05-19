@@ -21,9 +21,7 @@ const ResumeAnalysis = () => {
 
 	const characterCount = jobDescription.length
 
-	const canGenerate =
-		jobDescription.trim().length > 0 &&
-		(selfDescription.trim().length > 0 || Boolean(resumeFile))
+	const canGenerate = jobDescription.trim().length > 0 && Boolean(resumeFile)
 
 	const handleGenerate = async () => {
 		if (!canGenerate || loading) {

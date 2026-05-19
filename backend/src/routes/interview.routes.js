@@ -31,6 +31,13 @@ interviewRouter.get('/reports/:interviewId', authUSer.authMiddleware, interviewC
  */
 interviewRouter.get('/', authUSer.authMiddleware, interviewController.getAllInterviewReportsForUser)
 
+/**
+ * @route POST /api/interview/resume/pdf
+ * @description generate resume pdf on the basis of user self description, resume and job description
+ * @access Private
+ */
+interviewRouter.post('/resume/pdf/:interviewId', authUSer.authMiddleware, upload.single('resume'), interviewController.generateResumePdf)
+
 
 
 
