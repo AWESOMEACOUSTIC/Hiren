@@ -1,5 +1,5 @@
-const pdfParse = require('pdf-parse')
-const { generateInterviewReport: generateInterviewReportAi, generateResumePdf } = require('../services/ai.service')
+const pdfParse = require('pdf-parse/lib/pdf-parse.js')
+const { generateInterviewReport: generateInterviewReportAi, generateResumePdf: generateResumePdfAi } = require('../services/ai.service')
 const interviewReportModel = require('../models/interviewReport.model')
 
 
@@ -17,8 +17,15 @@ async function generateInterviewReport (req, res){
         return res.status(400).json({ message: 'Resume file is required' })
     }
 
-    if (!selfDescription || !jobDescription) {
-        return res.status(400).json({ message: 'Self description and job description are required' })
+    const normalizedSelfDescription = typeof selfDescription === 'string'
+        ? selfDescription.trim()
+        : ''
+    const normalizedJobDescription = typeof jobDescription === 'string'
+        ? jobDescription.trim()
+        : ''
+
+    if (!normalizedJobDescription) {
+        return res.status(400).json({ message: 'Job description is required' })
     }
 
     try {
@@ -28,20 +35,25 @@ async function generateInterviewReport (req, res){
 
         const interviewReportByAi = await generateInterviewReportAi({ 
             resume: resumeText, 
-            selfDescription, 
-            jobDescription
+            selfDescription: normalizedSelfDescription, 
+            jobDescription: normalizedJobDescription
         })
 
         if (!interviewReportByAi) {
             throw new Error('AI response was empty')
         }
 
+        const safeTitle = interviewReportByAi?.title?.trim()
+            ? interviewReportByAi.title.trim()
+            : 'Interview Report'
+
         const interviewReport = await interviewReportModel.create({ 
             user: req.user.id,
             resumeText,
-            jobDescription,
-            selfDescription,
-            ...interviewReportByAi
+            jobDescription: normalizedJobDescription,
+            selfDescription: normalizedSelfDescription,
+            ...interviewReportByAi,
+            title: safeTitle
         })
 
         res.status(201).json({
@@ -90,7 +102,7 @@ async function getAllInterviewReportsForUser(req, res) {
     try {
         const interviewReports = await (await interviewReportModel.find({ 
             user: req.user.id 
-        }).populate('user', 'name email')).sort({ createdAt: -1 }).select("-resumeText -selfDescription -jobDescription -__v -technicalQuestions -behaviouralQuestions -skillGaps -preparationResources") // Exclude large text fields for the list view
+        }).populate('user', 'name email')).sort({ createdAt: -1 }).select("-resumeText -selfDescription -jobDescription -__v -technicalQuestions -behavioralQuestions -skillGaps -preparationResources") // Exclude large text fields for the list view
         res.status(200).json({ interviewReports })
     } catch (error) {
         console.error('Error fetching interview reports:', error)
@@ -118,7 +130,7 @@ async function generateResumePdf(req, res){
     const { resumeText, jobDescription, selfDescription } = interviewReport
 
     try {
-        const pdfBuffer = await generateResumePdf({ resumeText, jobDescription, selfDescription })
+        const pdfBuffer = await generateResumePdfAi({ resumeText, jobDescription, selfDescription })
         res.set({
             'Content-Type': 'application/pdf',
             'Content-Disposition': `attachment; filename=resume_${interviewId}.pdf`,

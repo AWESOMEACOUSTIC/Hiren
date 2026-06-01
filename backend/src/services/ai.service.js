@@ -31,6 +31,187 @@ const interviewReportSchema = z.object({
     title: z.string().describe("A concise title summarizing the overall assessment of the candidate's fit for the role, such as 'Strong Fit', 'Good Fit with Some Gaps', 'Needs Improvement', etc.")
 })
 
+const DEFAULT_INTENTION = 'Explain the purpose behind the question.'
+const DEFAULT_ANSWER =
+    'Provide a structured response covering context, approach, and impact.'
+
+const normalizeText = (value) => (typeof value === 'string' ? value.trim() : '')
+
+const ensureArray = (value) => {
+    if (Array.isArray(value)) {
+        return value
+    }
+    if (value === null || value === undefined) {
+        return []
+    }
+    return [value]
+}
+
+const normalizeQuestionItem = (item) => {
+    if (typeof item === 'string') {
+        const question = normalizeText(item)
+        if (!question) {
+            return null
+        }
+        return {
+            question,
+            intention: DEFAULT_INTENTION,
+            answer: DEFAULT_ANSWER,
+        }
+    }
+
+    if (!item || typeof item !== 'object') {
+        return null
+    }
+
+    const question = normalizeText(item.question || item.prompt || item.text)
+    if (!question) {
+        return null
+    }
+
+    const intention =
+        normalizeText(item.intention || item.intent || item.why) || DEFAULT_INTENTION
+    const answer =
+        normalizeText(item.answer || item.response || item.solution) || DEFAULT_ANSWER
+
+    return {
+        question,
+        intention,
+        answer,
+    }
+}
+
+const normalizeQuestions = (value) =>
+    ensureArray(value).map(normalizeQuestionItem).filter(Boolean)
+
+const normalizeSkillGapItem = (item) => {
+    let skill = ''
+    let severity = ''
+
+    if (typeof item === 'string') {
+        skill = normalizeText(item)
+    } else if (item && typeof item === 'object') {
+        skill = normalizeText(item.skill || item.name)
+        severity = normalizeText(item.severity || item.level)
+    }
+
+    if (!skill) {
+        return null
+    }
+
+    const normalizedSeverity = ['low', 'medium', 'high'].includes(
+        severity.toLowerCase()
+    )
+        ? severity.toLowerCase()
+        : 'medium'
+
+    return {
+        skill,
+        severity: normalizedSeverity,
+    }
+}
+
+const normalizeSkillGaps = (value) =>
+    ensureArray(value).map(normalizeSkillGapItem).filter(Boolean)
+
+const normalizePreparationResourceItem = (item, index) => {
+    let day = null
+    let resource = ''
+
+    if (typeof item === 'string') {
+        resource = normalizeText(item)
+        day = index + 1
+    } else if (item && typeof item === 'object') {
+        day = Number(item.day)
+        resource = normalizeText(item.resource || item.title || item.link)
+    }
+
+    if (!resource) {
+        return null
+    }
+
+    const normalizedDay = Number.isFinite(day) && day > 0 ? Math.round(day) : index + 1
+
+    return {
+        day: normalizedDay,
+        resource,
+    }
+}
+
+const normalizePreparationResources = (value) =>
+    ensureArray(value)
+        .map((item, index) => normalizePreparationResourceItem(item, index))
+        .filter(Boolean)
+
+const normalizeMatchScore = (value) => {
+    const score = Number(value)
+    if (!Number.isFinite(score)) {
+        return undefined
+    }
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+}
+
+const resolveTitle = (value, matchScore) => {
+    const title = normalizeText(value)
+    if (title) {
+        return title
+    }
+
+    if (typeof matchScore !== 'number') {
+        return 'Interview Report'
+    }
+
+    if (matchScore >= 85) {
+        return 'Strong Fit'
+    }
+
+    if (matchScore >= 70) {
+        return 'Good Fit with Some Gaps'
+    }
+
+    if (matchScore >= 50) {
+        return 'Potential Fit'
+    }
+
+    return 'Needs Improvement'
+}
+
+const extractJsonPayload = (rawText) => {
+    const trimmed = rawText.trim()
+    if (trimmed.startsWith('```')) {
+        const fenceEnd = trimmed.lastIndexOf('```')
+        if (fenceEnd > 0) {
+            const fenceBody = trimmed.slice(trimmed.indexOf('\n') + 1, fenceEnd)
+            return fenceBody.trim()
+        }
+    }
+
+    const firstBrace = trimmed.indexOf('{')
+    const lastBrace = trimmed.lastIndexOf('}')
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        return trimmed.slice(firstBrace, lastBrace + 1)
+    }
+
+    return trimmed
+}
+
+const normalizeInterviewReport = (payload) => {
+    const safePayload = payload && typeof payload === 'object' ? payload : {}
+    const matchScore = normalizeMatchScore(safePayload.matchScore)
+
+    return {
+        matchScore,
+        technicalQuestions: normalizeQuestions(safePayload.technicalQuestions),
+        behavioralQuestions: normalizeQuestions(
+            safePayload.behavioralQuestions || safePayload.behaviouralQuestions
+        ),
+        skillGaps: normalizeSkillGaps(safePayload.skillGaps),
+        preparationResources: normalizePreparationResources(safePayload.preparationResources),
+        title: resolveTitle(safePayload.title, matchScore),
+    }
+}
+
 
 async function generateInterviewReport({resume, selfDescription, jobDescription}){
     
@@ -39,7 +220,8 @@ async function generateInterviewReport({resume, selfDescription, jobDescription}
 2. A list of technical questions that are likely to be asked in the interview, along with the intention behind each question and an ideal answer.
 3. A list of behavioral questions that are likely to be asked in the interview, along with the intention behind each question and an ideal answer.
 4. A list of skill gaps identified during the interview, along with their severity (low, medium, high).
-5. A list of preparation resources recommended for the candidate to fill the identified skill gaps, along with the day number for which each resource is recommended.`
+5. A list of preparation resources recommended for the candidate to fill the identified skill gaps, along with the day number for which each resource is recommended.
+6. A concise title summarizing the overall assessment of the candidate's fit for the role, such as 'Strong Fit', 'Good Fit with Some Gaps', 'Needs Improvement', etc.`
     
     
     const response = await ai.models.generateContent({
@@ -56,7 +238,9 @@ async function generateInterviewReport({resume, selfDescription, jobDescription}
     }
 
     try {
-        return JSON.parse(response.text)
+        const rawText = extractJsonPayload(response.text)
+        const parsedPayload = JSON.parse(rawText)
+        return normalizeInterviewReport(parsedPayload)
     } catch (error) {
         error.message = `Failed to parse AI JSON response: ${error.message}`
         throw error
