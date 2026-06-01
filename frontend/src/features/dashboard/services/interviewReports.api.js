@@ -1,9 +1,6 @@
-import axios from 'axios'
+import { createApiClient } from '../../../services/http/client.js'
 
-const api = axios.create({
-	baseURL: 'http://localhost:4000/api/interview',
-	withCredentials: true,
-})
+const api = createApiClient('/interview')
 
 export const getInterviewReportById = async (interviewId) => {
 	try {

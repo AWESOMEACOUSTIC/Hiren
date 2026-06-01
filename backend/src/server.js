@@ -1,6 +1,6 @@
 const http = require('http')
-const app = require('./app/app')
 const env = require('./config/env')
+const app = require('./app/app')
 const { connectDatabase, disconnectDatabase } = require('./config/db')
 
 const server = http.createServer(app)

@@ -1,10 +1,7 @@
-import axios from 'axios'
+import { createApiClient } from '../../../services/http/client.js'
 
 // Create an axios instance with default configuration to interact with the authentication API
-const api = axios.create({
-    baseURL: "http://localhost:4000/api/auth",
-    withCredentials: true // Include cookies in all requests {reason: "Needed for session management"}
-})
+const api = createApiClient('/auth')
 
 export async function register({username, email, password}){
     try{

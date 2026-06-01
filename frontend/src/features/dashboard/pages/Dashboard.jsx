@@ -13,124 +13,109 @@ import { useInterviewReports } from '../hooks/useInterviewReports.js'
 const Dashboard = () => {
 	const { reportId } = useParams()
 	const [activeSection, setActiveSection] = useState('technical')
-	const { report, handleGetReportById } = useInterviewReports()
-
-	const defaultTechnicalQuestions = [
-		{
-			title: 'Implement a Distributed Rate Limiter',
-			intention:
-				'Frame the shared storage model and time-window strategy before choosing data structures.',
-			description:
-				'Design and implement a scalable rate limiter that can handle requests across multiple servers using a sliding window algorithm. Consider edge cases involving network partitions and clock drift.',
-		},
-		{
-			title: 'Implement a Distributed Rate Limiter',
-			intention:
-				'Define fairness, burst tolerance, and consistency requirements across regions up front.',
-			description:
-				'Design and implement a scalable rate limiter that can handle requests across multiple servers using a sliding window algorithm. Consider edge cases involving network partitions and clock drift.',
-		},
-	]
-
-	const defaultBehavioralQuestions = [
-		{
-			title: 'Leading a Cross-Team Migration',
-			intention:
-				'Highlight leadership decisions, stakeholder alignment, and measurable outcomes.',
-			description:
-				'Share a time you led a cross-team migration under a tight deadline. What tradeoffs did you make, and how did you keep stakeholders aligned?',
-		},
-		{
-			title: 'Navigating Conflicting Priorities',
-			intention:
-				'Show how you communicated risk, negotiated priorities, and built consensus.',
-			description:
-				'Describe a moment where product goals conflicted with technical constraints. How did you communicate risk and drive a decision?',
-		},
-	]
-
-	const roadmapItems = [
-		{
-			phase: 'Phase 01',
-			title: 'Foundations of Distributed Systems',
-			summary:
-				'Build depth in consensus, replication strategies, and fault-tolerant messaging to support senior-level system design rounds.',
-			tags: ['Consensus', 'Replication', 'Messaging'],
-			badge: 'Active',
-		},
-		{
-			phase: 'Phase 02',
-			title: 'Scalable Backend Patterns',
-			summary:
-				'Strengthen rate limiting, caching, and async workflows using system design drills and targeted practice sessions.',
-			tags: ['Caching', 'Rate Limits', 'Queues'],
-			badge: 'Next',
-		},
-	]
-
-	const defaultSkillGaps = ['#', '# Message', '# Event', '# Loop', '# Concurrency']
-
-	const insights = [
-		{
-			icon: MatchScoreIcons.Check,
-			text: 'Strong Backend alignment with target roles.',
-			tone: 'text-[#c7bfff]',
-		},
-		{
-			icon: MatchScoreIcons.Alert,
-			text: 'Missing Kubernetes & Cloud Orchestration experience.',
-			tone: 'text-[#ffb4ab]',
-		},
-		{
-			icon: MatchScoreIcons.Spark,
-			text: 'Project complexity scores in the top 10%.',
-			tone: 'text-[#90cdff]',
-		},
-	]
+	const {
+		report,
+		loading,
+		handleGetReportById,
+		handleGetReports,
+	} = useInterviewReports()
 
 	useEffect(() => {
-		if (reportId) {
-			handleGetReportById(reportId)
-		}
-	}, [handleGetReportById, reportId])
+		const loadReport = async () => {
+			try {
+				if (reportId) {
+					await handleGetReportById(reportId)
+					return
+				}
 
-	const technicalQuestions = report?.technicalQuestions?.length
-		? report.technicalQuestions.map((item, index) => ({
-				title: item.question || `Technical Question ${index + 1}`,
-				intention:
-					item.intention ||
-					'Define the system constraints and edge cases before proposing a solution.',
-				description:
-					item.answer ||
-					item.question ||
-					'Outline your approach with key design considerations and tradeoffs.',
-			}))
-		: defaultTechnicalQuestions
+				if (report?._id) {
+					return
+				}
+
+				const reportsData = await handleGetReports()
+				const latestReport = reportsData?.interviewReports?.[0]
+				if (latestReport?._id) {
+					await handleGetReportById(latestReport._id)
+				}
+			} catch (error) {
+				console.error('Error loading dashboard report:', error)
+			}
+		}
+
+		loadReport()
+	}, [handleGetReportById, handleGetReports, report?._id, reportId])
+
+	const technicalQuestions = (report?.technicalQuestions || []).map(
+		(item, index) => ({
+			title: item.question || `Technical Question ${index + 1}`,
+			intention: item.intention,
+			description: item.answer,
+		})
+	)
 
 	const behavioralSource = report?.behavioralQuestions || report?.behaviouralQuestions
 
-	const behavioralQuestions = behavioralSource?.length
-		? behavioralSource.map((item, index) => ({
-				title: item.question || `Behavioral Prompt ${index + 1}`,
-				intention:
-					item.intention ||
-					'Showcase ownership, collaboration, and the measurable impact of your actions.',
-				description:
-					item.answer ||
-					item.question ||
-					'Share the context, your actions, and the outcome using a clear narrative.',
-			}))
-		: defaultBehavioralQuestions
+	const behavioralQuestions = (behavioralSource || []).map((item, index) => ({
+		title: item.question || `Behavioral Prompt ${index + 1}`,
+		intention: item.intention,
+		description: item.answer,
+	}))
 
-	const skillGaps = report?.skillGaps?.length
-		? report.skillGaps
-				.map((gap) => gap.skill || gap)
-				.filter(Boolean)
-				.map((skill) => `# ${skill}`)
-		: defaultSkillGaps
+	const skillGaps = (report?.skillGaps || [])
+		.map((gap) => (typeof gap === 'string' ? gap : gap.skill))
+		.filter(Boolean)
+		.map((skill) => `# ${skill}`)
+
+	const preparationResources = report?.preparationResources || []
+
+	const roadmapItems = preparationResources.map((item, index) => ({
+		phase: `Day ${item.day || index + 1}`,
+		title: `Preparation Focus ${index + 1}`,
+		summary: item.resource || 'Recommended preparation resource.',
+		badge: index === 0 ? 'Active' : 'Next',
+		tags: [],
+	}))
 
 	const matchScore =
-		typeof report?.matchScore === 'number' ? Math.round(report.matchScore) : 85
+		typeof report?.matchScore === 'number' ? Math.round(report.matchScore) : 0
+
+	const topGap = (report?.skillGaps || []).find(
+		(gap) => gap?.severity === 'high'
+	)
+		|| (report?.skillGaps || [])[0]
+
+	const insights = []
+
+	if (report?.title) {
+		insights.push({
+			icon: MatchScoreIcons.Check,
+			text: `Assessment: ${report.title}`,
+			tone: 'text-[#c7bfff]',
+		})
+	}
+
+	if (topGap) {
+		const gapSkill = typeof topGap === 'string' ? topGap : topGap.skill
+		const gapSeverity =
+			typeof topGap === 'string'
+				? null
+				: topGap.severity
+		const tone = gapSeverity === 'high' ? 'text-[#ffb4ab]' : 'text-[#90cdff]'
+		const label = gapSeverity ? gapSeverity.toUpperCase() : 'MODERATE'
+		insights.push({
+			icon: MatchScoreIcons.Alert,
+			text: `Top gap: ${gapSkill} (${label})`,
+			tone,
+		})
+	}
+
+	if (preparationResources.length > 0) {
+		insights.push({
+			icon: MatchScoreIcons.Spark,
+			text: `${preparationResources.length} prep items ready`,
+			tone: 'text-[#90cdff]',
+		})
+	}
 
 	return (
 		<DashboardLayout
@@ -150,7 +135,15 @@ const Dashboard = () => {
 					tabs={['Recent', 'Saved']}
 					title="Technical Interview Prep"
 				>
-					<QuestionList questions={technicalQuestions} />
+					{technicalQuestions.length ? (
+						<QuestionList questions={technicalQuestions} />
+					) : (
+						<p className="text-sm text-[#928ea0]">
+							{loading
+								? 'Loading technical questions...'
+								: 'No technical questions available yet.'}
+						</p>
+					)}
 				</DashboardSection>
 			) : null}
 			{activeSection === 'behavioral' ? (
@@ -158,10 +151,18 @@ const Dashboard = () => {
 					subtitle="Practice high-signal narratives for leadership, conflict, and ownership questions."
 					title="Behavioral Interview Prep"
 				>
-					<QuestionList
-						label="Behavioral Prompt"
-						questions={behavioralQuestions}
-					/>
+					{behavioralQuestions.length ? (
+						<QuestionList
+							label="Behavioral Prompt"
+							questions={behavioralQuestions}
+						/>
+					) : (
+						<p className="text-sm text-[#928ea0]">
+							{loading
+								? 'Loading behavioral prompts...'
+								: 'No behavioral prompts available yet.'}
+						</p>
+					)}
 				</DashboardSection>
 			) : null}
 			{activeSection === 'roadmap' ? (
@@ -169,18 +170,26 @@ const Dashboard = () => {
 					subtitle="Track your progression across deep systems topics and targeted interview drills."
 					title="Road Map"
 				>
-					<div className="space-y-5">
-						{roadmapItems.map((item) => (
-							<RoadmapCard
-								badge={item.badge}
-								key={item.title}
-								phase={item.phase}
-								summary={item.summary}
-								tags={item.tags}
-								title={item.title}
-							/>
-						))}
-					</div>
+					{roadmapItems.length ? (
+						<div className="space-y-5">
+							{roadmapItems.map((item) => (
+								<RoadmapCard
+									badge={item.badge}
+									key={`${item.phase}-${item.title}`}
+									phase={item.phase}
+									summary={item.summary}
+									tags={item.tags}
+									title={item.title}
+								/>
+							))}
+						</div>
+					) : (
+						<p className="text-sm text-[#928ea0]">
+							{loading
+								? 'Loading roadmap...'
+								: 'No preparation roadmap available yet.'}
+						</p>
+					)}
 				</DashboardSection>
 			) : null}
 		</DashboardLayout>
